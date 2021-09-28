@@ -21,6 +21,7 @@ contract ELETToken is Governed, ERC20, ERC20Burnable {
     IERC721Proxy public erc721Proxy;       
     IEverLight   public everLight;
     bool         public isActive = false;
+    string       private _rules = '';
 
     struct StakingInfo {
        bool initial;
@@ -78,7 +79,7 @@ contract ELETToken is Governed, ERC20, ERC20Burnable {
         // Calculate how many coins the user can get.
         // power * stakeTime(6h) * 0.0015 / 4
         uint256 times = intervalBn / MIN_STAKING_TIME;
-        uint256 coinAmount =  _stakingPowerlist[tokenId].mul(6).mul(times).mul(15).div(4).div(1000);
+        uint256 coinAmount =  _stakingPowerlist[tokenId].mul(times).mul(15).div(4).div(1000);
 
         // mint
         coinAmount = coinAmount * 10 ** decimals();
@@ -97,11 +98,17 @@ contract ELETToken is Governed, ERC20, ERC20Burnable {
         isActive = _isActive;
     }
 
-    function rules() external pure returns (string memory) {
+    function setRules(string memory data) external onlyGovernor {
+        _rules = data;
+    }
+
+    function rules() external view returns (string memory) {
         // rules: {"minPower": MIN_STAKING_POWER, "curPR": currentWinningPR, "desc":""}
-        string memory output = string(abi.encodePacked('{"minStakeTime":"', MIN_STAKING_TIME.toString(), '",'));
-        output = string(abi.encodePacked(output, '"desc":', '"', 'The higher the arithmetic power, the more times you receive NFT, the higher the probability of winning', '"}'));
-        return output;
+        return _rules;
+    }
+
+    function stakeBlockNumber(address account, uint256 tokenId) external view returns (uint256) {
+       return _stakingUserList[account][tokenId].stakeBn;
     }
 
 
